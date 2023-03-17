@@ -27,7 +27,6 @@ const loadPlaces = function(coords) {
                       text.setAttribute('scale','15,15')
                       text.setAttribute('name','ssafy')
                       text.setAttribute('gps-entity-place', `latitude: 35.20526; longitude: 126.81173;`);
-                      text.addEventListener('loaded', () => window.dispatchEvent(new CustomEvent('gps-entity-place-loaded')));
   
                       // for debug purposes, just show in a bigger scale, otherwise I have to personally go on places...
                     //   icon.setAttribute('scale', '20, 20');
