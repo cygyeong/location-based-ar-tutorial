@@ -1,87 +1,74 @@
 
-window.onload = () => {
-    const button = document.querySelector('button[data-action="change"]');
-    button.innerText = '﹖';
+const loadPlaces = function(coords) {
+    // fetch data from user coords using external APIs, or simply add places data statically
+    // please look at GeoAR.js repository on examples/click-places/places.js for full code
+  }
+  
+  window.onload = () => {
+      const scene = document.querySelector('a-scene');
+  
+      // first get current user location
+      return navigator.geolocation.getCurrentPosition(function (position) {
+  
+          // than use it to load from remote APIs some places nearby
+          loadPlaces(position.coords)
+              .then((places) => {
+                  places.forEach((place) => {
+                      const latitude = place.location.lat;
+                      const longitude = place.location.lng;
+  
+                      // add place icon
+                    //   const icon = document.createElement('a-image');
+                    //   icon.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
+                    //   icon.setAttribute('name', place.name);
+                    //   icon.setAttribute('src', '../assets/map-marker.png');
 
-    let places = staticLoadPlaces();
-    renderPlaces(places);
-};
-
-function staticLoadPlaces() {
-    return [
-        {
-            name: 'Pokèmon',
-            location: {
-                // decomment the following and add coordinates:
-                lat: 35.20525,
-                lng: 126.81173,
-            },
-        },
-    ];
-}
-
-var models = [
-    {
-        url: './assets/magnemite/scene.gltf',
-        scale: '0.5 0.5 0.5',
-        info: 'Magnemite, Lv. 5, HP 10/10',
-        rotation: '0 180 0',
-    },
-    {
-        url: './assets/articuno/scene.gltf',
-        scale: '0.2 0.2 0.2',
-        rotation: '0 180 0',
-        info: 'Articuno, Lv. 80, HP 100/100',
-    },
-    {
-        url: './assets/dragonite/scene.gltf',
-        scale: '0.08 0.08 0.08',
-        rotation: '0 180 0',
-        info: 'Dragonite, Lv. 99, HP 150/150',
-    },
-];
-
-var modelIndex = 0;
-var setModel = function (model, entity) {
-    if (model.scale) {
-        entity.setAttribute('scale', model.scale);
-    }
-
-    if (model.rotation) {
-        entity.setAttribute('rotation', model.rotation);
-    }
-
-    if (model.position) {
-        entity.setAttribute('position', model.position);
-    }
-
-    entity.setAttribute('gltf-model', model.url);
-
-    const div = document.querySelector('.instructions');
-    div.innerText = model.info;
-};
-
-function renderPlaces(places) {
-    let scene = document.querySelector('a-scene');
-
-    places.forEach((place) => {
-        let latitude = place.location.lat;
-        let longitude = place.location.lng;
-
-        let model = document.createElement('a-entity');
-        model.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
-
-        setModel(models[modelIndex], model);
-
-        model.setAttribute('animation-mixer', '');
-
-        document.querySelector('button[data-action="change"]').addEventListener('click', function () {
-            var entity = document.querySelector('[gps-entity-place]');
-            modelIndex++;
-            var newIndex = modelIndex % models.length;
-            setModel(models[newIndex], entity);
-        });
-
-        scene.appendChild(model);
-    });
-}
+                      const text = document.createTreeWalker('a-text')
+                      text.setAttribute('scale','15,15')
+                      text.setAttribute('name','ssafy')
+                      text.setAttribute('gps-entity-place', `latitude: 35.20526; longitude: 126.81173;`);
+                      text.addEventListener('loaded', () => window.dispatchEvent(new CustomEvent('gps-entity-place-loaded')));
+  
+                      // for debug purposes, just show in a bigger scale, otherwise I have to personally go on places...
+                    //   icon.setAttribute('scale', '20, 20');
+                    //   icon.addEventListener('loaded', () => window.dispatchEvent(new CustomEvent('gps-entity-place-loaded')));
+                      text.setAttribute('scale', '20, 20');
+  
+                      text.addEventListener('loaded', () => window.dispatchEvent(new CustomEvent('gps-entity-place-loaded')));
+  
+                      const clickListener = function(ev) {
+                          ev.stopPropagation();
+                          ev.preventDefault();
+              
+                          const name = ev.target.getAttribute('name');
+              
+                          const el = ev.detail.intersection && ev.detail.intersection.object.el;
+              
+                          if (el && el === ev.target) {
+                              const label = document.createElement('span');
+                              const container = document.createElement('div');
+                              container.setAttribute('id', 'place-label');
+                              label.innerText = name;
+                              container.appendChild(label);
+                              document.body.appendChild(container);
+              
+                              setTimeout(() => {
+                                  container.parentElement.removeChild(container);
+                              }, 1500);
+                          }
+                      };
+              
+                      text.addEventListener('click', clickListener);
+  
+                      scene.appendChild(text);
+                  });
+              })
+      },
+          (err) => console.error('Error in retrieving position', err),
+          {
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 27000,
+          }
+      );
+  };
